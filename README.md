@@ -7,9 +7,9 @@
 
 ### ✈️ 概要<br>
     Java コアパッケージ (Servlet + Utils)
-    言語:       Java
-    WEBコンテナ: Tomcat
-    DB:         PostgreSQL
+    言語:       Java11
+    WEBコンテナ: Tomcat8.5
+    DB:        PostgreSQL
 
 ### ✈️ パッケージ構成<br>
     javacore
