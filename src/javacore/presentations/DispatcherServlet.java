@@ -16,10 +16,10 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/helloworld")
 public class DispatcherServlet extends HttpServlet {
 
-	private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String param = request.getParameter("param");
-        response.getWriter().write("Hello "+ param);
-    }
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    String param = request.getParameter("param");
+    response.getWriter().write("Hello "+ param);
+  }
 }
