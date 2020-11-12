@@ -1,8 +1,11 @@
 package javacore.presentations;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
@@ -27,6 +30,9 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
 
   /** コントローラ一覧のマップ。 */
   private static final Map<String, RequestHandler> CONTROLLER_MAP = new HashMap<>();
+
+  /** デフォルトサーブレット名 (Tomcat, Jetty, JBoss, and GlassFish)。 */
+  private static final String DEFAULT_SERVLET_NAME = "default";
 
   /**
    * コンストラクタ。
@@ -82,6 +88,7 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
   @Override
 
   public void destroy() {
+
     logger.trace("start.");
 
     // no op
@@ -109,9 +116,10 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
    *
    * @param request  HTTPリクエスト
    * @param response HTTPレスポンス
+   * @throws IOException エラー発生
    */
   @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     logger.trace("start.");
 
@@ -125,9 +133,10 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
    *
    * @param request  HTTPリクエスト
    * @param response HTTPレスポンス
+   * @throws IOException エラー発生
    */
   @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     logger.trace("start.");
 
@@ -141,9 +150,10 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
    *
    * @param request  HTTPリクエスト
    * @param response HTTPレスポンス
+   * @throws IOException エラー発生
    */
   @Override
-  protected void doPut(HttpServletRequest request, HttpServletResponse response) {
+  protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     logger.trace("start.");
 
@@ -157,9 +167,10 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
    *
    * @param request  HTTPリクエスト
    * @param response HTTPレスポンス
+   * @throws IOException エラー発生
    */
   @Override
-  protected void doDelete(HttpServletRequest request, HttpServletResponse response) {
+  protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     logger.trace("start.");
 
@@ -175,11 +186,87 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
    *
    * @param request  HTTPリクエスト
    * @param response HTTPレスポンス
+   * @throws IOException
    */
-  private void processRequest(HttpServletRequest request, HttpServletResponse response) {
+  private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     logger.trace("start.");
 
+    try {
+      RequestHandler handler = this.resolveRequestHandler(request);
+
+      // Controllerが登録されていない(css/js/img)場合はデフォルトサーブレットにディスパッチする
+      if (handler == null) {
+        this.dispatchToDefault(request, response);
+      }
+      else {
+        this.dispatchToController(request, response, handler);
+      }
+    }
+    catch (Exception e) {
+      logger.error("ERROR: failed to handle request.");
+      response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
     logger.trace("done.");
+  }
+
+  /**
+   * ハンドラを取得する。
+   *
+   * @param request HTTPリクエスト
+   * @return リクエストハンドラ
+   */
+  private RequestHandler resolveRequestHandler(HttpServletRequest request) {
+
+    String requestUri = request.getRequestURI();
+
+    if (requestUri == null || requestUri.length() == 0) {
+      return null;
+    }
+    int index = requestUri.indexOf('/', 1);
+    if (index < 0) {
+      requestUri = "/";
+    }
+    else {
+      requestUri = requestUri.substring(index);
+    }
+
+    requestUri = requestUri.toLowerCase();
+    RequestHandler handler = CONTROLLER_MAP.get(requestUri);
+    if (handler == null) {
+      if (requestUri.endsWith("/")) {
+        requestUri = requestUri.substring(0, requestUri.length() - 1);
+      }
+      else {
+        requestUri += "/";
+      }
+      handler = CONTROLLER_MAP.get(requestUri);
+    }
+    return handler;
+  }
+
+  /**
+   * デフォルトサーブレットへのディスパッチ処理。
+   *
+   * @param request  HTTPリクエスト
+   * @param response HTTPレスポンス
+   * @throws ServletException エラー発生
+   * @throws IOException エラー発生
+   */
+  private void dispatchToDefault(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    logger.trace("start.");
+
+    ServletContext servletContext = this.getServletContext();
+    RequestDispatcher requestDispatcher = servletContext.getNamedDispatcher(DEFAULT_SERVLET_NAME);
+
+    requestDispatcher.forward(request, response);
+
+    logger.trace("done.");
+  }
+
+  private void dispatchToController(HttpServletRequest request, HttpServletResponse response, RequestHandler handler) throws Exception {
+
   }
 }
