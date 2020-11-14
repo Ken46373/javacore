@@ -266,6 +266,14 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
     logger.trace("done.");
   }
 
+  /**
+   * Controllerへのディスパッチ処理。
+   *
+   * @param request  HTTPリクエスト
+   * @param response HTTPレスポンス
+   * @param handler  リクエストハンドラ
+   * @throws Exception Controllerの呼び出しに失敗,またはControllerが例外をthrowした場合
+   */
   private void dispatchToController(HttpServletRequest request, HttpServletResponse response, RequestHandler handler) throws Exception {
 
   }
