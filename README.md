@@ -11,6 +11,8 @@
     WEBコンテナ: Tomcat8.5
     DB:        PostgreSQL
 
+<img src="https://i.gyazo.com/05b724ab8c37a7f7afabc8ed94868051.png" alt="Image from Gyazo" width="400"/><br>
+
 ### ✈️ パッケージ構成<br>
     javacore
         - data
