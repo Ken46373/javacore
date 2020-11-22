@@ -7,7 +7,7 @@ import javacore.presentations.views.View;
  *
  * @author kenminami
  */
-public abstract class Filters {
+public abstract class Filter {
 
   /**
    * フィルターを実行する。
