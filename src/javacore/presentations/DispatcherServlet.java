@@ -277,4 +277,39 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
   private void dispatchToController(HttpServletRequest request, HttpServletResponse response, RequestHandler handler) throws Exception {
 
   }
+
+  /**
+   * 不正リクエストの受信時処理。
+   *
+   * @param request HttpServletRequest
+   * @param response HttpServletResponse
+   * @throws Exception 例外発生
+   */
+  private void onInvalidRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+    boolean isAjaxRequest = this.isAjaxRequest(request);
+
+    if (isAjaxRequest) {
+
+    }
+  }
+
+  /**
+   * ajaxのリクエストかどうか判定する。
+   *
+   * @param request  HTTPリクエスト
+   * @return ajaxのリクエストかどうか
+   */
+  private boolean isAjaxRequest(HttpServletRequest request) {
+
+    String requestedWith = request.getHeader("X-Requested-With");
+    if (requestedWith != null) {
+        requestedWith = requestedWith.toLowerCase();
+        if (requestedWith != null && requestedWith.equals("xmlhttprequest")) {
+            return true;
+        }
+    }
+
+    return false;
+  }
 }
