@@ -182,27 +182,6 @@ public abstract class Controller {
   }
 
   /**
-   * Cookieを取得する。
-   *
-   * @param name Cookieの名前
-   * @return Cookie(見つからなかった場合はnull)
-   */
-  private String getCookie(String name) {
-
-      Cookie[] cookies = this.request.getCookies();
-      if (cookies == null || cookies.length == 0) {
-          return null;
-      }
-
-      for (Cookie cookie : cookies) {
-          if (name.equals(cookie.getName())) {
-              return cookie.getValue();
-          }
-      }
-      return null;
-  }
-
-  /**
    * Cookieを設定する。
    * 保存期間は365日。
    *
