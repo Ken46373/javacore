@@ -1,8 +1,12 @@
 package javacore.presentations;
 
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -276,6 +280,27 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
    */
   private void dispatchToController(HttpServletRequest request, HttpServletResponse response, RequestHandler handler) throws Exception {
 
+    if (handler.getHttpMethod() != HttpMethod.ANY) {
+      // リクエストのHTTPメソッドが登録しているものと違う場合
+      HttpMethod httpMethod = HttpMethod.resolve(request.getMethod());
+      if (httpMethod != handler.getHttpMethod()) {
+          logger.warn(String.format(
+                  "HTTPメソッドが異なります。期待: %s, 受信: %s",
+                  handler.getHttpMethod().toString(),
+                  httpMethod.toString()));
+          this.onInvalidRequest(request, response);
+          return;
+      }
+    }
+
+    // ajaxOnly の判定処理
+    if (handler.getAjaxOnly()) {
+        if (this.isAjaxRequest(request) == false) {
+            logger.warn("ajaxリクエストではありません。");
+            this.onInvalidRequest(request, response);
+            return;
+        }
+    }
   }
 
   /**
@@ -293,6 +318,51 @@ public class DispatcherServlet extends HttpServlet implements ServletContextList
 
     }
   }
+
+  /**
+   * ファイルにアクセスするファイルシステムを構築する。
+   *
+   * @param uri ファイルシステムを識別するURI
+   * @param env プロパティのマップ
+   * @param loader プロバイダを構築するためのクラスローダ
+   * @return 新しいファイルシステム
+   * @throws IOException ファイル・システムの作成中に入出力エラーが発生した場合
+   */
+  protected static FileSystem newFileSystem(URI uri, Map<String,?> env, ClassLoader loader)
+          throws IOException {
+
+      // FileSystems.newFileSystem(uri, env, loader) を呼び出すと例外が発生するので、
+      // 例外を発生させないよう変更
+
+      String scheme = uri.getScheme();
+
+      // check installed providers
+      for (FileSystemProvider provider: FileSystemProvider.installedProviders()) {
+          if (scheme.equalsIgnoreCase(provider.getScheme())) {
+              try {
+                  return provider.newFileSystem(uri, env);
+              }
+              catch (Exception ex) {
+                  // no op
+              }
+          }
+      }
+
+      // if not found, use service-provider loading facility
+      if (loader != null) {
+          ServiceLoader<FileSystemProvider> sl = ServiceLoader
+              .load(FileSystemProvider.class, loader);
+          for (FileSystemProvider provider: sl) {
+              if (scheme.equalsIgnoreCase(provider.getScheme())) {
+                  return provider.newFileSystem(uri, env);
+              }
+          }
+      }
+
+      // throw new ProviderNotFoundException("Provider \"" + scheme + "\" not found");
+      return null;
+  }
+
 
   /**
    * ajaxのリクエストかどうか判定する。
